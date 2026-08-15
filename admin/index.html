@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel Admin – KFFR Indramayu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red:    #ef4444;
+            --red-dk: #b91c1c;
+            --bg:     #09090b;
+            --card:   #111113;
+            --border: #27272a;
+            --muted:  #71717a;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f8fafc; }
+        .comic-title { font-family: 'Bangers', cursive; letter-spacing: 0.05em; }
+        .btn-comic { border: 2px solid #000; box-shadow: 3px 3px 0px #000; transition: all 0.1s ease; }
+        .btn-comic:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+
+        .field-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px; color:#f4f4f5; font-size:14px; outline:none; transition:border-color .2s; font-family:inherit; }
+        .field-input:focus { border-color:var(--red); }
+        .field-label { font-size:11px; font-weight:800; color:#a1a1aa; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; }
+
+        /* filter chips */
+        .filter-chip { padding:7px 14px; border-radius:99px; font-size:12px; font-weight:700; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap; }
+        .filter-chip.active, .filter-chip:hover { border-color:var(--red); color:#fff; background:#ef444415; }
+
+        /* poster thumbnail + upload */
+        .poster-thumb { width:44px; height:55px; border-radius:8px; overflow:hidden; background:#18181b; border:1px solid var(--border); flex-shrink:0; cursor:pointer; }
+        .poster-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+        .poster-thumb .ph-icon { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#3f3f46; font-size:14px; }
+
+        .poster-drop { border:2px dashed var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:border-color .2s, background .2s; background:var(--bg); }
+        .poster-drop:hover, .poster-drop.dragover { border-color:var(--red); background:#ef444408; }
+        .poster-drop.has-image { border-style:solid; border-color:var(--border); }
+        .poster-preview-box { width:70px; aspect-ratio:4/5; border-radius:9px; overflow:hidden; background:#18181b; border:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+        .poster-preview-box img { width:100%; height:100%; object-fit:cover; display:block; }
+        .poster-drop-text h4 { font-size:12.5px; font-weight:800; color:#fff; margin:0 0 3px; }
+        .poster-drop-text p { font-size:11.5px; color:var(--muted); margin:0; line-height:1.5; }
+        .poster-remove-btn { margin-left:auto; flex-shrink:0; width:28px; height:28px; border-radius:8px; background:#27272a; border:none; color:#a1a1aa; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; transition:background .15s,color .15s; }
+        .poster-remove-btn:hover { background:var(--red); color:#fff; }
+
+        /* status select colors */
+        select.status-select { appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2371717a'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+
+        /* toast */
+        #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#18181b; border:1px solid var(--border); color:#f4f4f5; padding:12px 22px; border-radius:14px; font-size:13px; font-weight:700; z-index:999; opacity:0; transition:all .35s cubic-bezier(.2,.8,.3,1); pointer-events:none; display:flex; align-items:center; gap:10px; box-shadow:0 8px 32px #0009; max-width:90vw; }
+        #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+        /* modal fade */
+        .modal-overlay { transition:opacity .2s; }
+
+        ::-webkit-scrollbar { height:8px; width:8px; }
+        ::-webkit-scrollbar-thumb { background:#27272a; border-radius:99px; }
+
+        @media(max-width:640px){
+            .stat-box { min-width:76px !important; padding:10px !important; }
+        }
+    </style>
+</head>
+<body class="bg-neutral-950 min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white">
+
+    <!-- ═══ LOGIN ═══ -->
+    <div id="login-container" class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-neutral-900 border-2 border-red-700 max-w-md w-full rounded-2xl p-6 md:p-8 space-y-6 shadow-2xl">
+            <div class="text-center space-y-2">
+                <img src="../logo.png" alt="Logo" class="h-14 mx-auto object-contain mb-2" onerror="this.onerror=null; this.src='https://placehold.co/60x60/dc2626/ffffff?text=FF';">
+                <h1 class="comic-title text-4xl text-red-500 tracking-wide">ADMIN<span class="text-white">LOGIN</span></h1>
+                <p class="text-neutral-400 text-xs font-bold tracking-wider uppercase">Verifikasi Keamanan Sheet2Cloud</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-extrabold text-neutral-300 uppercase tracking-wider">Username</label>
+                    <input type="text" id="admin-user" required autocomplete="username" placeholder="Username admin" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-extrabold text-neutral-300 uppercase tracking-wider">Password</label>
+                    <div class="relative">
+                        <input type="password" id="admin-pass" required autocomplete="current-password" placeholder="••••••••" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 pr-11 text-sm text-white focus:outline-none focus:border-red-500">
+                        <button type="button" onclick="togglePassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors">
+                            <i class="fa-solid fa-eye" id="pass-eye-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-extrabold py-3.5 rounded-xl btn-comic border-black text-sm uppercase tracking-widest mt-2">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Dashboard
+                </button>
+            </form>
+            <div class="text-center pt-3 border-t border-neutral-800/80">
+                <a href="../" class="text-sm text-neutral-400 hover:text-white transition-colors inline-flex items-center gap-2 font-medium"><i class="fa-solid fa-arrow-left"></i> Kembali ke Jadwal</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="dashboard-container" class="hidden flex-1 flex flex-col">
+        <nav class="bg-neutral-900 border-b-4 border-red-600 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-40 shadow-lg">
+            <div class="flex items-center gap-2">
+                <img src="../logo.png" alt="Logo" class="h-8 w-auto object-contain" onerror="this.onerror=null; this.src='https://placehold.co/30x30/dc2626/ffffff?text=FF';">
+                <span class="comic-title text-2xl text-red-500 tracking-wider">CONTROL<span class="text-white">PANEL</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="../" target="_blank" class="hidden sm:inline-flex items-center gap-2 text-neutral-400 hover:text-white text-xs font-bold px-3 py-2 rounded-xl border border-neutral-800 transition-colors">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Lihat Situs
+                </a>
+                <button onclick="handleLogout()" class="bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white text-xs md:text-sm font-extrabold px-4 py-2 rounded-xl border border-red-500/30 transition-all shadow">
+                    <i class="fa-solid fa-power-off mr-2"></i> Keluar
+                </button>
+            </div>
+        </nav>
+
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-5">
+
+            <!-- Header + stats -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-neutral-900 p-5 rounded-2xl border border-neutral-800 shadow">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2.5"><i class="fa-solid fa-database text-red-500"></i> Manajer Roster Free Fire Offline</h3>
+                    <p class="text-xs md:text-sm text-neutral-400">Validasi, ubah semua data, atau hapus berkas permohonan turnamen lokal Indramayu.</p>
+                </div>
+                <div class="flex gap-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <div class="stat-box flex-1 sm:flex-initial bg-neutral-950 border border-neutral-800 px-5 py-2.5 rounded-xl text-white font-bold text-center min-w-[76px]">
+                        <span id="count-total" class="block text-xl font-black">0</span>
+                        <span class="text-neutral-500 text-[10px] uppercase tracking-wider block font-extrabold">Total</span>
+                    </div>
+                    <div class="stat-box flex-1 sm:flex-initial bg-neutral-950 border border-neutral-800 px-5 py-2.5 rounded-xl text-amber-400 font-bold text-center min-w-[76px]">
+                        <span id="count-pending" class="block text-xl font-black">0</span>
+                        <span class="text-neutral-500 text-[10px] uppercase tracking-wider block font-extrabold">Pending</span>
+                    </div>
+                    <div class="stat-box flex-1 sm:flex-initial bg-neutral-950 border border-neutral-800 px-5 py-2.5 rounded-xl text-emerald-400 font-bold text-center min-w-[76px]">
+                        <span id="count-approved" class="block text-xl font-black">0</span>
+                        <span class="text-neutral-500 text-[10px] uppercase tracking-wider block font-extrabold">Aktif</span>
+                    </div>
+                    <div class="stat-box flex-1 sm:flex-initial bg-neutral-950 border border-neutral-800 px-5 py-2.5 rounded-xl text-red-400 font-bold text-center min-w-[76px]">
+                        <span id="count-rejected" class="block text-xl font-black">0</span>
+                        <span class="text-neutral-500 text-[10px] uppercase tracking-wider block font-extrabold">Ditolak</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar: search + filter + tambah -->
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center bg-neutral-900 p-4 rounded-2xl border border-neutral-800 shadow">
+                <div class="relative flex-1 min-w-[200px]">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm"></i>
+                    <input type="text" id="admin-search" oninput="renderAdminTable()" placeholder="Cari nama turnamen atau lokasi..." class="field-input" style="padding-left:38px;">
+                </div>
+                <div class="flex gap-1.5 flex-wrap">
+                    <button class="filter-chip active" data-status="all" onclick="setStatusFilter(this,'all')">Semua</button>
+                    <button class="filter-chip" data-status="Pending" onclick="setStatusFilter(this,'Pending')">Pending</button>
+                    <button class="filter-chip" data-status="Approved" onclick="setStatusFilter(this,'Approved')">Approved</button>
+                    <button class="filter-chip" data-status="Rejected" onclick="setStatusFilter(this,'Rejected')">Ditolak</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="fetchMasterData()" title="Muat ulang data" class="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-neutral-300 transition-colors">
+                        <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+                    </button>
+                    <button onclick="openCreateModal()" class="flex-shrink-0 flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-xs md:text-sm font-extrabold px-4 py-2.5 rounded-xl btn-comic border-black whitespace-nowrap">
+                        <i class="fa-solid fa-plus"></i> Tambah Turnamen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-neutral-900 border-2 border-neutral-800 rounded-2xl shadow-[4px_4px_0px_#000000] overflow-hidden">
+                <div class="overflow-x-auto w-full block">
+                    <table class="w-full text-left text-sm min-w-[1050px]">
+                        <thead class="bg-neutral-950 text-neutral-400 font-extrabold text-xs uppercase tracking-wider border-b-2 border-neutral-800">
+                            <tr>
+                                <th class="p-4 py-4.5">Poster</th>
+                                <th class="p-4">Nama Turnamen</th>
+                                <th class="p-4">Lokasi Offline</th>
+                                <th class="p-4">Tanggal</th>
+                                <th class="p-4">Hadiah & Slot</th>
+                                <th class="p-4">Kontak / WA</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-center">Aksi Manajemen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-neutral-800/60 text-neutral-200 font-medium bg-neutral-900/40"></tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-xs text-neutral-500 font-semibold px-1" id="result-count-text"></p>
+        </main>
+    </div>
+
+    <!-- ═══ MODAL: TAMBAH / EDIT TURNAMEN (form gabungan) ═══ -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 backdrop-blur-md modal-overlay">
+        <div class="bg-neutral-900 border-2 border-neutral-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
+                <h3 class="comic-title text-2xl text-white tracking-wide" id="modal-heading"><i class="fa-solid fa-pen-to-square text-red-500 mr-1.5"></i> KOREKSI DATA JADWAL</h3>
+                <button onclick="closeEditModal()" class="text-neutral-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <input type="hidden" id="edit-id">
+            <input type="hidden" id="edit-mode" value="edit">
+
+            <div class="space-y-4">
+                <!-- Poster -->
+                <div>
+                    <label class="field-label">Poster Turnamen (Rasio 4:5)</label>
+                    <input type="file" id="edit-poster-input" accept="image/*" style="display:none;" onchange="handlePosterFile(this.files[0])">
+                    <div class="poster-drop" id="poster-drop" onclick="document.getElementById('edit-poster-input').click()">
+                        <div class="poster-preview-box" id="poster-preview-box">
+                            <i class="fa-solid fa-image" style="color:#3f3f46;font-size:20px;"></i>
+                        </div>
+                        <div class="poster-drop-text">
+                            <h4 id="poster-drop-title">Klik untuk unggah poster</h4>
+                            <p>JPG/PNG, otomatis dipotong 4:5. Maks 5MB.</p>
+                        </div>
+                        <button type="button" class="poster-remove-btn" id="poster-remove-btn" style="display:none;" onclick="removePoster(event)" title="Hapus poster">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <canvas id="poster-canvas" style="display:none;"></canvas>
+                </div>
+
+                <div>
+                    <label class="field-label">Nama Turnamen</label>
+                    <input type="text" id="edit-title" placeholder="Contoh: Battle Indramayu Season 3" class="field-input">
+                </div>
+                <div>
+                    <label class="field-label">Lokasi Offline Match</label>
+                    <input type="text" id="edit-location" placeholder="Gedung Juang Indramayu" class="field-input">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label">Prizepool</label>
+                        <input type="text" id="edit-prize" placeholder="Rp 5.000.000" class="field-input">
+                    </div>
+                    <div>
+                        <label class="field-label">Total Slot</label>
+                        <input type="number" id="edit-slots" min="2" placeholder="48" class="field-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label">Tanggal</label>
+                        <input type="date" id="edit-date" class="field-input">
+                    </div>
+                    <div>
+                        <label class="field-label">Status</label>
+                        <select id="edit-status" class="field-input status-select">
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Ditolak</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Link WhatsApp Kontak</label>
+                    <input type="url" id="edit-contact" placeholder="https://wa.me/628xxx" class="field-input">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-3 border-t border-neutral-800">
+                <button onclick="closeEditModal()" class="px-5 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-xs md:text-sm font-bold rounded-xl text-neutral-300 transition-colors">Batal</button>
+                <button onclick="saveEditTournament()" id="modal-save-btn" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-xs md:text-sm font-bold rounded-xl text-white btn-comic border-black">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL: KONFIRMASI (delete / status) ═══ -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 backdrop-blur-md modal-overlay">
+        <div class="bg-neutral-900 border-2 border-neutral-700 rounded-2xl max-w-sm w-full p-6 space-y-5 shadow-2xl text-center">
+            <div class="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-500 text-xl" id="confirm-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-white" id="confirm-title">Konfirmasi</h3>
+                <p class="text-sm text-neutral-400 mt-1" id="confirm-message">Apakah Anda yakin?</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 px-5 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-xs md:text-sm font-bold rounded-xl text-neutral-300 transition-colors">Batal</button>
+                <button id="confirm-action-btn" class="flex-1 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-xs md:text-sm font-bold rounded-xl text-white btn-comic border-black">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ LIGHTBOX POSTER ═══ -->
+    <div id="poster-lightbox" class="hidden fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4 backdrop-blur-md modal-overlay" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Poster" style="max-width:min(90vw,360px);max-height:85vh;border-radius:16px;border:1px solid #27272a;object-fit:contain;">
+        <button onclick="closeLightbox()" class="absolute top-5 right-5 text-white text-2xl w-10 h-10 flex items-center justify-center bg-neutral-900/80 rounded-full border border-neutral-700"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <footer class="bg-neutral-950 border-t-2 border-neutral-900 w-full mt-auto py-8 px-4 text-center space-y-4">
+        <div class="flex justify-center gap-4">
+            <a href="https://instagram.com/kff.indramayu" target="_blank" class="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-900 border-2 border-neutral-800 hover:border-red-600 px-4 py-2 rounded-xl text-neutral-400 hover:text-white transition-all shadow-[2px_2px_0px_#000] text-xs md:text-sm font-bold">
+                <i class="fa-brands fa-instagram text-base text-red-500"></i> @kff.indramayu
+            </a>
+            <a href="https://tiktok.com/@ff.indramayu" target="_blank" class="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-900 border-2 border-neutral-800 hover:border-red-600 px-4 py-2 rounded-xl text-neutral-400 hover:text-white transition-all shadow-[2px_2px_0px_#000] text-xs md:text-sm font-bold">
+                <i class="fa-brands fa-tiktok text-base text-red-500"></i> @ff.indramayu
+            </a>
+        </div>
+        <p class="text-xs text-neutral-500 tracking-wide">
+            &copy; 2026 KFFR Indramayu Hub. All Tournaments Are Offline Matches.
+        </p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvO_bjxyVIGEuJJHjFgw0QE0Sk4yrx55bCSOku9x-F_DNlfiVShe_CNWaTUftK4RR1w/exec";
+        let tournaments = [];
+        let statusFilter = 'all';
+        let posterBase64 = null;  // hasil crop 4:5, null jika tidak diganti
+        let posterMime   = 'image/jpeg';
+        let posterName   = 'poster.jpg';
+
+        // ─── TOAST ───
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').textContent = msg;
+            icon.innerHTML = type==='success'
+                ? '<i class="fa-solid fa-circle-check" style="color:#22c55e;"></i>'
+                : (type==='error' ? '<i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i>' : '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        function togglePassVisibility() {
+            const input = document.getElementById('admin-pass');
+            const icon = document.getElementById('pass-eye-icon');
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            icon.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        }
+
+        // ─── LOGIN / LOGOUT ───
+        async function handleLogin(e) {
+            e.preventDefault();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifikasi Kredensial...`;
+
+            const payload = {
+                action: "login",
+                username: document.getElementById('admin-user').value,
+                password: document.getElementById('admin-pass').value
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    showDashboard();
+                } else {
+                    showToast(result.message || "Username atau password salah.", 'error');
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                showToast("Gangguan koneksi ke Google Apps Script.", 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Dashboard`;
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            fetchMasterData();
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            window.location.reload();
+        }
+
+        // ─── FETCH DATA ───
+        async function fetchMasterData() {
+            const tbody = document.getElementById('admin-table-body');
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.classList.add('fa-spin');
+            tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-neutral-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-xl text-red-500 mr-2"></i>Menyinkronkan data dari Google Sheet...</td></tr>`;
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=read`);
+                const result = await response.json();
+                if(result.status === "success") {
+                    tournaments = result.data;
+                    renderAdminTable();
+                    updateCounters();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${result.message || 'Gagal memuat data.'}</td></tr>`;
+                }
+            } catch(e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat basis data cloud.</td></tr>`;
+            } finally {
+                refreshIcon.classList.remove('fa-spin');
+            }
+        }
+
+        // ─── FILTER / SEARCH ───
+        function setStatusFilter(el, val) {
+            statusFilter = val;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderAdminTable();
+        }
+
+        function normalizeStatus(t) {
+            if (t.status === 'Approved' || t.status === 'Aktif') return 'Approved';
+            if (t.status === 'Rejected') return 'Rejected';
+            return 'Pending';
+        }
+
+        // ─── RENDER TABLE ───
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            const q = (document.getElementById('admin-search').value || '').toLowerCase();
+
+            let list = tournaments.slice();
+            if (statusFilter !== 'all') list = list.filter(t => normalizeStatus(t) === statusFilter);
+            if (q) list = list.filter(t => (t.title||'').toLowerCase().includes(q) || (t.location||'').toLowerCase().includes(q));
+            list.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById('result-count-text').textContent = `Menampilkan ${list.length} dari ${tournaments.length} total data turnamen.`;
+
+            tbody.innerHTML = '';
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-neutral-400"><i class="fa-solid fa-folder-open text-3xl block mb-3 opacity-30"></i>Tidak ada data yang cocok.</td></tr>`;
+                return;
+            }
+
+            list.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-neutral-900/80 transition-colors border-b border-neutral-800/50";
+
+                const st = normalizeStatus(t);
+                const statusBadge = {
+                    Approved: `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-1 rounded-full">Approved</span>`,
+                    Rejected: `<span class="bg-red-500/10 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full">Ditolak</span>`,
+                    Pending:  `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1 rounded-full">Pending</span>`
+                }[st];
+
+                const posterCell = t.poster
+                    ? `<div class="poster-thumb" onclick="openLightbox('${t.poster}')"><img src="${t.poster}" alt="Poster ${t.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;ph-icon&quot;><i class=&quot;fa-solid fa-image&quot;></i></div>'"></div>`
+                    : `<div class="poster-thumb"><div class="ph-icon"><i class="fa-solid fa-image"></i></div></div>`;
+
+                let actionBtns = '';
+                if (st !== 'Approved') actionBtns += `<button onclick="quickStatus('${t.id}','Approved')" title="Setujui" class="bg-emerald-600 text-white text-xs font-extrabold px-2.5 py-1.5 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm"><i class="fa-solid fa-check"></i></button>`;
+                if (st !== 'Rejected') actionBtns += `<button onclick="quickStatus('${t.id}','Rejected')" title="Tolak" class="bg-amber-600/80 text-white text-xs font-extrabold px-2.5 py-1.5 rounded-lg hover:bg-amber-500 transition-colors shadow-sm"><i class="fa-solid fa-ban"></i></button>`;
+                actionBtns += `<button onclick="openEditModal('${t.id}')" title="Edit semua data" class="bg-neutral-800 text-white text-xs font-extrabold px-2.5 py-1.5 rounded-lg hover:bg-neutral-700 border border-neutral-700 transition-colors shadow-sm"><i class="fa-solid fa-pen"></i></button>`;
+                actionBtns += `<button onclick="confirmDelete('${t.id}','${(t.title||'').replace(/'/g,"\\'")}')" title="Hapus" class="bg-red-600/20 text-red-400 text-xs font-extrabold px-2.5 py-1.5 rounded-lg hover:bg-red-600 hover:text-white border border-red-500/20 transition-colors shadow-sm"><i class="fa-solid fa-trash"></i></button>`;
+
+                tr.innerHTML = `
+                    <td class="p-3">${posterCell}</td>
+                    <td class="p-4 font-bold text-white max-w-xs truncate">${t.title}</td>
+                    <td class="p-4 text-xs md:text-sm text-neutral-300 font-semibold"><i class="fa-solid fa-location-dot text-red-500 mr-1.5"></i>${t.location || 'Offline Match'}</td>
+                    <td class="p-4 text-xs md:text-sm text-neutral-300">${t.date ? new Date(t.date).toLocaleDateString('id-ID', {year:'numeric', month:'short', day:'numeric'}) : "-"}</td>
+                    <td class="p-4">
+                        <div class="text-emerald-400 font-bold text-sm">${t.prize || '-'}</div>
+                        <div class="text-neutral-400 text-xs font-medium">${t.slots || 0} Slots Maks</div>
+                    </td>
+                    <td class="p-4 text-xs md:text-sm">${t.contact ? `<a href="${t.contact}" target="_blank" class="text-red-400 hover:text-red-300 font-bold inline-flex items-center gap-1"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>Hubungi</a>` : '<span class="text-neutral-600">-</span>'}</td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4">
+                        <div class="flex gap-1.5 justify-center flex-wrap">${actionBtns}</div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ─── QUICK STATUS (ACC / TOLAK) ───
+        function quickStatus(id, status) {
+            const label = status === 'Approved' ? 'menyetujui' : 'menolak';
+            openConfirmModal(
+                status === 'Approved' ? 'Setujui Turnamen?' : 'Tolak Turnamen?',
+                `Apakah Anda yakin ingin ${label} turnamen ini? Perubahan langsung tampil di halaman publik.`,
+                async () => {
+                    try {
+                        await fetch(SCRIPT_URL, {
+                            method: "POST",
+                            headers: { "Content-Type": "text/plain" },
+                            body: JSON.stringify({ action: "updateStatus", id: id, status: status })
+                        });
+                        showToast(status === 'Approved' ? 'Turnamen disetujui.' : 'Turnamen ditolak.');
+                        closeConfirmModal();
+                        fetchMasterData();
+                    } catch(e) { showToast('Gagal memperbarui status.', 'error'); }
+                }
+            );
+        }
+
+        // ─── DELETE ───
+        function confirmDelete(id, title) {
+            openConfirmModal(
+                'Hapus Turnamen?',
+                `Data "${title}" akan dihapus permanen dari basis data dan tidak bisa dikembalikan.`,
+                async () => {
+                    try {
+                        await fetch(SCRIPT_URL, {
+                            method: "POST",
+                            headers: { "Content-Type": "text/plain" },
+                            body: JSON.stringify({ action: "delete", id: id })
+                        });
+                        showToast('Data berhasil dihapus.');
+                        closeConfirmModal();
+                        fetchMasterData();
+                    } catch(e) { showToast('Gagal menghapus data.', 'error'); }
+                }
+            );
+        }
+
+        // ─── CONFIRM MODAL (generic) ───
+        function openConfirmModal(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            const btn = document.getElementById('confirm-action-btn');
+            const newBtn = btn.cloneNode(true); // reset listener lama
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', onConfirm);
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+        function closeConfirmModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
+
+        // ─── LIGHTBOX ───
+        function openLightbox(url) {
+            document.getElementById('lightbox-img').src = url;
+            document.getElementById('poster-lightbox').classList.remove('hidden');
+        }
+        function closeLightbox() { document.getElementById('poster-lightbox').classList.add('hidden'); }
+
+        // ─── CREATE / EDIT MODAL ───
+        function openCreateModal() {
+            document.getElementById('edit-mode').value = 'create';
+            document.getElementById('modal-heading').innerHTML = '<i class="fa-solid fa-plus text-red-500 mr-1.5"></i> TAMBAH TURNAMEN BARU';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('edit-title').value = '';
+            document.getElementById('edit-location').value = '';
+            document.getElementById('edit-date').value = '';
+            document.getElementById('edit-prize').value = '';
+            document.getElementById('edit-slots').value = '';
+            document.getElementById('edit-contact').value = '';
+            document.getElementById('edit-status').value = 'Approved';
+            resetPosterUI();
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const tour = tournaments.find(t => String(t.id) === String(id));
+            if (!tour) return;
+            document.getElementById('edit-mode').value = 'edit';
+            document.getElementById('modal-heading').innerHTML = '<i class="fa-solid fa-pen-to-square text-red-500 mr-1.5"></i> KOREKSI DATA JADWAL';
+            document.getElementById('edit-id').value = tour.id;
+            document.getElementById('edit-title').value = tour.title || '';
+            document.getElementById('edit-location').value = tour.location || '';
+            document.getElementById('edit-date').value = tour.date ? String(tour.date).split('T')[0] : "";
+            document.getElementById('edit-prize').value = tour.prize || '';
+            document.getElementById('edit-slots').value = tour.slots || '';
+            document.getElementById('edit-contact').value = tour.contact || '';
+            document.getElementById('edit-status').value = normalizeStatus(tour);
+
+            resetPosterUI();
+            if (tour.poster) {
+                document.getElementById('poster-preview-box').innerHTML = `<img src="${tour.poster}" alt="Poster saat ini">`;
+                document.getElementById('poster-drop-title').textContent = 'Poster saat ini — klik untuk ganti';
+                document.getElementById('poster-drop').classList.add('has-image');
+            }
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
+
+        async function saveEditTournament() {
+            const mode = document.getElementById('edit-mode').value;
+            const title = document.getElementById('edit-title').value.trim();
+            const date  = document.getElementById('edit-date').value;
+            const location = document.getElementById('edit-location').value.trim();
+            const prize = document.getElementById('edit-prize').value.trim();
+            const slots = parseInt(document.getElementById('edit-slots').value) || 0;
+            const contact = document.getElementById('edit-contact').value.trim();
+            const status = document.getElementById('edit-status').value;
+
+            if (!title || !date || !location || !prize || !slots) {
+                showToast('Lengkapi semua field wajib terlebih dahulu.', 'warn');
+                return;
+            }
+
+            const payload = {
+                action: mode === 'create' ? 'insert' : 'edit',
+                title, date, location, prize, slots, contact, status,
+                posterData: posterBase64 || '',
+                posterMime, posterName
+            };
+            if (mode === 'edit') payload.id = document.getElementById('edit-id').value;
+
+            const btn = document.getElementById('modal-save-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    showToast(mode === 'create' ? 'Turnamen baru berhasil ditambahkan!' : 'Perubahan berhasil disimpan!');
+                    closeEditModal();
+                    fetchMasterData();
+                } else {
+                    showToast(result.message || 'Gagal menyimpan data.', 'error');
+                }
+            } catch(e) {
+                showToast('Gagal menyimpan data — periksa koneksi.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan Perubahan';
+            }
+        }
+
+        // ─── COUNTERS ───
+        function updateCounters() {
+            const pending  = tournaments.filter(t => normalizeStatus(t) === 'Pending').length;
+            const approved = tournaments.filter(t => normalizeStatus(t) === 'Approved').length;
+            const rejected = tournaments.filter(t => normalizeStatus(t) === 'Rejected').length;
+            document.getElementById('count-total').textContent = tournaments.length;
+            document.getElementById('count-pending').textContent = pending;
+            document.getElementById('count-approved').textContent = approved;
+            document.getElementById('count-rejected').textContent = rejected;
+        }
+
+        // ─── POSTER UPLOAD (crop otomatis ke rasio 4:5) — dipakai di modal tambah & edit ───
+        function handlePosterFile(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showToast('File harus berupa gambar (JPG/PNG).', 'warn'); return; }
+            if (file.size > 5*1024*1024) { showToast('Ukuran gambar maksimal 5MB.', 'warn'); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => cropToPoster(img, file.name);
+                img.onerror = () => showToast('Gambar gagal dibaca, coba file lain.', 'warn');
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function cropToPoster(img, fileName) {
+            const targetRatio = 4/5;
+            let sx=0, sy=0, sw=img.width, sh=img.height;
+            const currentRatio = sw/sh;
+            if (currentRatio > targetRatio) { sw = sh * targetRatio; sx = (img.width - sw)/2; }
+            else if (currentRatio < targetRatio) { sh = sw / targetRatio; sy = (img.height - sh)/2; }
+
+            const outW = 800, outH = 1000;
+            const canvas = document.getElementById('poster-canvas');
+            canvas.width = outW; canvas.height = outH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+
+            posterBase64 = canvas.toDataURL('image/jpeg', 0.85);
+            posterMime = 'image/jpeg';
+            posterName = (fileName || 'poster').replace(/\.[^.]+$/, '') + '.jpg';
+
+            document.getElementById('poster-preview-box').innerHTML = `<img src="${posterBase64}" alt="Preview poster">`;
+            document.getElementById('poster-drop-title').textContent = 'Poster siap diunggah — klik untuk ganti';
+            document.getElementById('poster-drop').classList.add('has-image');
+            document.getElementById('poster-remove-btn').style.display = 'flex';
+        }
+
+        function removePoster(evt) {
+            if (evt) evt.stopPropagation();
+            posterBase64 = null;
+            document.getElementById('edit-poster-input').value = '';
+            document.getElementById('poster-preview-box').innerHTML = '<i class="fa-solid fa-image" style="color:#3f3f46;font-size:20px;"></i>';
+            document.getElementById('poster-drop-title').textContent = 'Klik untuk unggah poster';
+            document.getElementById('poster-drop').classList.remove('has-image');
+            document.getElementById('poster-remove-btn').style.display = 'none';
+        }
+
+        function resetPosterUI() {
+            posterBase64 = null;
+            document.getElementById('edit-poster-input').value = '';
+            document.getElementById('poster-preview-box').innerHTML = '<i class="fa-solid fa-image" style="color:#3f3f46;font-size:20px;"></i>';
+            document.getElementById('poster-drop-title').textContent = 'Klik untuk unggah poster';
+            document.getElementById('poster-drop').classList.remove('has-image');
+            document.getElementById('poster-remove-btn').style.display = 'none';
+        }
+
+        // Drag & drop untuk dropzone poster
+        document.addEventListener('DOMContentLoaded', () => {
+            const drop = document.getElementById('poster-drop');
+            if (!drop) return;
+            ['dragenter','dragover'].forEach(evt => drop.addEventListener(evt, e => { e.preventDefault(); drop.classList.add('dragover'); }));
+            ['dragleave','drop'].forEach(evt => drop.addEventListener(evt, e => { e.preventDefault(); drop.classList.remove('dragover'); }));
+            drop.addEventListener('drop', e => {
+                const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                if (file) handlePosterFile(file);
+            });
+        });
+
+        // Close modals dengan klik area gelap / tombol Escape
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'edit-modal') closeEditModal();
+            if (e.target.id === 'confirm-modal') closeConfirmModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeEditModal(); closeConfirmModal(); closeLightbox(); }
+        });
+
+        window.onload = function() {
+            if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+                showDashboard();
+            }
+        };
+    </script>
+</body>
+</html>
