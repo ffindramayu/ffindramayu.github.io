@@ -729,12 +729,12 @@
     }
 
     function shareSite() {
-        shareImage(
-            'banner.png',
-            'kffr-indramayu',
-            'KFFR Indramayu – Turnamen Free Fire Offline',
-            'Cek jadwal turnamen Free Fire offline se-Indramayu di KFFR Indramayu!'
-        );
+        const websiteUrl = window.location.origin + window.location.pathname;
+        const caption = `🔥 *KFFR INDRAMAYU*\n` +
+                    `Platform turnamen Free Fire offline terpercaya se-Indramayu.\n` +
+                    `Cek jadwal, daftar turnamen, dan gabung komunitas KFFR Indramayu.\n\n` +
+                    `🌐 ${websiteUrl}`;
+        shareImage('banner.png', 'kffr-indramayu', 'KFFR Indramayu – Turnamen Free Fire Offline', caption);
     }
 
     function shareTournament(id, evt) {
@@ -745,6 +745,7 @@
             showToast('Turnamen ini belum memiliki poster.', 'warn');
             return;
         }
+        const websiteUrl = window.location.origin + window.location.pathname;
         const caption = `🔥 *INFORMASI TOURNAMENT*\n` +
                     `📌 Nama: *${t.title}*\n` +
                     `📅 Tanggal: ${fmtDate(t.date)}\n` +
@@ -752,7 +753,9 @@
                     `🏆 Hadiah: ${t.prize || '-'}\n` +
                     `👥 Slot: ${t.slots} Tim\n\n` +
                     `📱 *NOMER WHATSAPP*\n` +
-                    `${t.contact}`;
+                    `${t.contact}\n\n` +
+                    `🌐 *LINK WEBSITE*\n` +
+                    `${websiteUrl}`;
         shareImage(t.poster, t.title, t.title, caption);
     }
 
