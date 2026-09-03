@@ -17,7 +17,6 @@
     <meta name="twitter:title" content="KFFR Indramayu – Turnamen Free Fire Offline">
     <meta name="twitter:description" content="Platform turnamen Free Fire offline terpercaya se-Indramayu.">
     <meta name="twitter:image" content="banner.png">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -142,8 +141,8 @@
         .poster-remove-btn:hover { background:#ef4444; color:#fff; }
 
         /* poster used inside tournament card image slot */
-        .tour-card-img { position:relative; }
         .tour-card-img img.poster-img { width:100%; height:100%; object-fit:cover; display:block; }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
         /* scroll top btn */
         #scroll-top { position:fixed; bottom:24px; right:24px; width:44px; height:44px; background:var(--red); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:16px; box-shadow:0 4px 16px #ef444440; opacity:0; transition:opacity .3s; z-index:50; }
@@ -690,56 +689,72 @@
         document.body.removeChild(ta);
     }
 
-    function shareSite() {
-        const url = window.location.href;
-        const shareData = {
-            title: 'KFFR Indramayu – Turnamen Free Fire Offline',
-            text: 'Cek jadwal turnamen Free Fire offline se-Indramayu di KFFR Indramayu!',
-            url: url
-        };
-        if(navigator.share) {
-            navigator.share(shareData).catch(() => {});
-        } else {
-            copyToClipboard(url);
-            showToast('Link situs disalin ke clipboard!');
+    // Unduh blob gambar sebagai file (dipakai saat Web Share API tidak mendukung file)
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function slugify(s) {
+        return (s || 'gambar').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60) || 'gambar';
+    }
+
+    // Ambil gambar dari URL lalu bagikan/unduh sebagai FILE gambar (bukan link teks)
+    async function shareImage(imageUrl, filenameBase, title, caption) {
+        try {
+            const res = await fetch(imageUrl);
+            if(!res.ok) throw new Error('fetch gagal');
+            const blob = await res.blob();
+            const ext = (blob.type.split('/')[1] || 'jpg').split('+')[0];
+            const file = new File([blob], `${slugify(filenameBase)}.${ext}`, { type: blob.type || 'image/jpeg' });
+
+            if(navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: title, text: caption });
+                return;
+            }
+            // Fallback: unduh gambar + salin caption ke clipboard
+            downloadBlob(blob, file.name);
+            copyToClipboard(caption);
+            showToast('Gambar diunduh & teks info disalin!');
+        } catch(e) {
+            if(e && e.name === 'AbortError') return;
+            showToast('Gagal memuat gambar untuk dibagikan.', 'warn');
         }
     }
 
-    function shareTournament(id, evt) {
-            if(evt) evt.stopPropagation();
-            const t = tournaments.find(x => String(x.id) === String(id));
-            if(!t) return;
-            
-            // Link website utama bersih tanpa kode unik
-            const websiteUrl = window.location.origin + window.location.pathname;
-            
-            // Mengambil link poster langsung dari data turnamen (spreadsheet)
-            const posterLink = t.poster;
-            
-            // Format teks menggunakan poster dari spreadsheet
-            const text = `${posterLink}\n\n` +
-                        `🔥 *INFORMASI TOURNAMENT*\n` +
-                        `📌 Nama: *${t.title}*\n` +
-                        `📅 Tanggal: ${fmtDate(t.date)}\n` +
-                        `📍 Lokasi: ${t.location || 'Area Indramayu'}\n` +
-                        `🏆 Hadiah: ${t.prize || '-'}\n` +
-                        `👥 Slot: ${t.slots} Tim\n\n` +
-                        `📱 *NOMER WHATSAPP*\n` +
-                        `${t.contact}\n\n` +
-                        `🌐 *LINK WEBSITE*\n` +
-                        `${websiteUrl}`;
+    function shareSite() {
+        shareImage(
+            'banner.png',
+            'kffr-indramayu',
+            'KFFR Indramayu – Turnamen Free Fire Offline',
+            'Cek jadwal turnamen Free Fire offline se-Indramayu di KFFR Indramayu!'
+        );
+    }
 
-            if(navigator.share) {
-                navigator.share({ title: t.title, text: text, url: websiteUrl }).catch((e) => {
-                    if(e && e.name === 'AbortError') return;
-                    copyToClipboard(text);
-                    showToast('Info turnamen disalin ke clipboard!');
-                });
-            } else {
-                copyToClipboard(text);
-                showToast('Info turnamen disalin ke clipboard!');
-            }
+    function shareTournament(id, evt) {
+        if(evt) evt.stopPropagation();
+        const t = tournaments.find(x => String(x.id) === String(id));
+        if(!t) return;
+        if(!t.poster) {
+            showToast('Turnamen ini belum memiliki poster.', 'warn');
+            return;
         }
+        const caption = `🔥 *INFORMASI TOURNAMENT*\n` +
+                    `📌 Nama: *${t.title}*\n` +
+                    `📅 Tanggal: ${fmtDate(t.date)}\n` +
+                    `📍 Lokasi: ${t.location || 'Area Indramayu'}\n` +
+                    `🏆 Hadiah: ${t.prize || '-'}\n` +
+                    `👥 Slot: ${t.slots} Tim\n\n` +
+                    `📱 *NOMER WHATSAPP*\n` +
+                    `${t.contact}`;
+        shareImage(t.poster, t.title, t.title, caption);
+    }
 
     // ─── TOAST ───
     function showToast(msg, type='success') {
@@ -1122,11 +1137,6 @@
     window.addEventListener('scroll', () => {
         document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 400);
     });
-
-    // ─── SPIN ANIM ───
-    const style = document.createElement('style');
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(style);
 
     // ─── BANNER SLIDER ───
     (function(){
