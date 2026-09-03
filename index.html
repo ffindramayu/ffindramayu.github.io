@@ -706,28 +706,40 @@
     }
 
     function shareTournament(id, evt) {
-        if(evt) evt.stopPropagation();
-        const t = tournaments.find(x => String(x.id) === String(id));
-        if(!t) return;
-        // Link share diarahkan lewat Apps Script dulu (bukan langsung ke GitHub Pages),
-        // supaya robot WhatsApp/FB/IG bisa baca meta gambar & judul turnamen sebelum redirect ke halaman asli.
-        const url = SCRIPT_URL + '?share=' + encodeURIComponent(t.id);
-        const text = `🔥 ${t.title}\n📅 ${fmtDate(t.date)}\n📍 ${t.location || 'Area Indramayu'}\n🏆 Hadiah: ${t.prize || '-'}\n\nInfo & pendaftaran di KFFR Indramayu:`;
+            if(evt) evt.stopPropagation();
+            const t = tournaments.find(x => String(x.id) === String(id));
+            if(!t) return;
+            
+            // Link website utama bersih tanpa kode unik
+            const websiteUrl = window.location.origin + window.location.pathname;
+            
+            // Mengambil link poster langsung dari data turnamen (spreadsheet)
+            const posterLink = t.poster;
+            
+            // Format teks menggunakan poster dari spreadsheet
+            const text = `${posterLink}\n\n` +
+                        `🔥 *INFORMASI TOURNAMENT*\n` +
+                        `📌 Nama: *${t.title}*\n` +
+                        `📅 Tanggal: ${fmtDate(t.date)}\n` +
+                        `📍 Lokasi: ${t.location || 'Area Indramayu'}\n` +
+                        `🏆 Hadiah: ${t.prize || '-'}\n` +
+                        `👥 Slot: ${t.slots} Tim\n\n` +
+                        `📱 *NOMER WHATSAPP*\n` +
+                        `${t.contact}\n\n` +
+                        `🌐 *LINK WEBSITE*\n` +
+                        `${websiteUrl}`;
 
-        // PENTING: dikirim sebagai LINK teks (bukan file gambar terlampir), supaya
-        // WhatsApp/FB/IG menarik kartu preview (gambar+judul) otomatis dari link-nya.
-        // Kalau gambar dilampirkan sebagai file, linknya malah sering hilang/tidak terkirim.
-        if(navigator.share) {
-            navigator.share({ title: t.title, text: text, url: url }).catch((e) => {
-                if(e && e.name === 'AbortError') return; // user membatalkan, tidak perlu fallback
-                copyToClipboard(text + '\n' + url);
+            if(navigator.share) {
+                navigator.share({ title: t.title, text: text, url: websiteUrl }).catch((e) => {
+                    if(e && e.name === 'AbortError') return;
+                    copyToClipboard(text);
+                    showToast('Info turnamen disalin ke clipboard!');
+                });
+            } else {
+                copyToClipboard(text);
                 showToast('Info turnamen disalin ke clipboard!');
-            });
-        } else {
-            copyToClipboard(text + '\n' + url);
-            showToast('Info turnamen disalin ke clipboard!');
+            }
         }
-    }
 
     // ─── TOAST ───
     function showToast(msg, type='success') {
