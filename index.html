@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KFFR Indramayu – Turnamen Free Fire Offline</title>
+    <meta name="description" content="Platform turnamen Free Fire offline terpercaya se-Indramayu. Cek jadwal, daftar turnamen, dan gabung komunitas KFFR Indramayu.">
+    <!-- Open Graph / social share preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="KFFR Indramayu">
+    <meta property="og:title" content="KFFR Indramayu – Turnamen Free Fire Offline">
+    <meta property="og:description" content="Platform turnamen Free Fire offline terpercaya se-Indramayu. Cek jadwal, daftar turnamen, dan gabung komunitas KFFR Indramayu.">
+    <meta property="og:image" content="banner.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KFFR Indramayu – Turnamen Free Fire Offline">
+    <meta name="twitter:description" content="Platform turnamen Free Fire offline terpercaya se-Indramayu.">
+    <meta name="twitter:image" content="banner.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -196,6 +209,23 @@
         .nav-pill::-webkit-scrollbar { display:none; }
         .nav-icon-btn { padding:8px 10px; border-radius:10px; color:#a1a1aa; background:transparent; border:1px solid var(--border); display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; cursor:pointer; transition:color .15s, border-color .15s, background .15s; text-decoration:none; white-space:nowrap; }
         .nav-icon-btn:hover { color:#ef4444; border-color:#ef4444; background:#ef444410; }
+        .nav-icon-btn .btn-label { display:none; }
+
+        /* ── NAV: hamburger menu on mobile ── */
+        .nav-toggle { display:none; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background:transparent; border:1px solid var(--border); color:#e4e4e7; cursor:pointer; flex-shrink:0; font-size:16px; }
+        .nav-toggle:hover { border-color:#ef4444; color:#ef4444; }
+        @media(max-width:640px){
+            .nav-toggle { display:flex; }
+            .nav-actions { display:none; position:absolute; top:100%; left:0; right:0; background:#0d0d0f; border-bottom:1px solid #27272a; padding:14px 16px 18px; flex-direction:column; align-items:stretch; gap:10px; box-shadow:0 16px 30px #000a; z-index:99; }
+            .nav-actions.open { display:flex; }
+            .nav-pill { flex-direction:column; background:transparent; border:none; padding:0; gap:6px; overflow:visible; }
+            .nav-pill .nav-btn { justify-content:flex-start; width:100%; }
+            .nav-actions .nav-btn span.label-text { display:inline; }
+            .nav-icon-btn { width:100%; justify-content:flex-start; }
+            .nav-icon-btn .btn-label { display:inline; }
+            .nav-share-btn .share-label { display:inline !important; }
+            .nav-share-btn { padding:8px 10px !important; }
+        }
     </style>
 </head>
 <body>
@@ -210,23 +240,26 @@
                 <div class="nav-subtitle" style="font-size:9px;color:#71717a;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">Komunitas Regional Resmi</div>
             </div>
         </div>
-        <div class="nav-actions">
+        <button class="nav-toggle" id="nav-toggle-btn" onclick="toggleMobileMenu()" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="nav-menu">
+            <i class="fa-solid fa-bars" id="nav-toggle-icon"></i>
+        </button>
+        <div class="nav-actions" id="nav-menu">
             <div class="nav-pill">
-                <button class="nav-btn active" id="nav-home" onclick="switchPage('home')">
+                <button class="nav-btn active" id="nav-home" onclick="switchPage('home');closeMobileMenu()">
                     <i class="fa-solid fa-calendar-days"></i><span class="label-text">Jadwal</span>
                 </button>
-                <button class="nav-btn" id="nav-register" onclick="switchPage('register')">
+                <button class="nav-btn" id="nav-register" onclick="switchPage('register');closeMobileMenu()">
                     <i class="fa-solid fa-clipboard-list"></i><span class="label-text">Daftar</span>
                 </button>
-                <button class="nav-btn" id="nav-community" onclick="switchPage('community')">
+                <button class="nav-btn" id="nav-community" onclick="switchPage('community');closeMobileMenu()">
                     <i class="fa-solid fa-users"></i><span class="label-text">Komunitas</span>
                 </button>
             </div>
-            <button class="nav-icon-btn nav-share-btn" onclick="shareSite()" title="Bagikan situs ini">
+            <button class="nav-icon-btn nav-share-btn" onclick="shareSite();closeMobileMenu()" title="Bagikan situs ini">
                 <i class="fa-solid fa-share-nodes"></i><span class="share-label">Bagikan</span>
             </button>
-            <a href="admin" style="padding:8px 10px;border-radius:10px;color:#52525b;display:flex;align-items:center;font-size:13px;border-left:1px solid var(--border);margin-left:2px;text-decoration:none;transition:color .15s;flex-shrink:0;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#52525b'">
-                <i class="fa-solid fa-lock"></i>
+            <a href="admin" class="nav-icon-btn" style="border-left:1px solid var(--border);" onclick="closeMobileMenu()">
+                <i class="fa-solid fa-lock"></i><span class="btn-label">Admin</span>
             </a>
         </div>
     </div>
@@ -609,6 +642,34 @@
         renderHomeGrid();
     }
 
+    // ─── MOBILE NAV MENU ───
+    function toggleMobileMenu() {
+        const menu = document.getElementById('nav-menu');
+        const icon = document.getElementById('nav-toggle-icon');
+        const btn  = document.getElementById('nav-toggle-btn');
+        const isOpen = menu.classList.toggle('open');
+        icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function closeMobileMenu() {
+        const menu = document.getElementById('nav-menu');
+        const icon = document.getElementById('nav-toggle-icon');
+        const btn  = document.getElementById('nav-toggle-btn');
+        menu.classList.remove('open');
+        icon.className = 'fa-solid fa-bars';
+        btn.setAttribute('aria-expanded', 'false');
+    }
+
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('nav-menu');
+        const btn  = document.getElementById('nav-toggle-btn');
+        if(menu && menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+            closeMobileMenu();
+        }
+    });
+    window.addEventListener('resize', () => { if(window.innerWidth > 640) closeMobileMenu(); });
+
     // ─── SHARE ───
     function copyToClipboard(text) {
         if(navigator.clipboard && navigator.clipboard.writeText) {
@@ -644,16 +705,38 @@
         }
     }
 
-    function shareTournament(id, evt) {
+    async function shareTournament(id, evt) {
         if(evt) evt.stopPropagation();
         const t = tournaments.find(x => String(x.id) === String(id));
         if(!t) return;
         const url = window.location.href.split('#')[0] + '#turnamen-' + t.id;
         const text = `🔥 ${t.title}\n📅 ${fmtDate(t.date)}\n📍 ${t.location || 'Area Indramayu'}\n🏆 Hadiah: ${t.prize || '-'}\n\nInfo & pendaftaran di KFFR Indramayu:`;
-        const shareData = { title: t.title, text: text, url: url };
-        if(navigator.share) {
-            navigator.share(shareData).catch(() => {});
-        } else {
+
+        // Coba lampirkan poster sebagai file gambar supaya langsung tampil di aplikasi chat (WA/IG/dll),
+        // bukan cuma link teks.
+        let posterFile = null;
+        if(t.poster && navigator.canShare) {
+            try {
+                const res = await fetch(t.poster);
+                const blob = await res.blob();
+                const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
+                const file = new File([blob], `${(t.title||'poster').replace(/[^a-z0-9]+/gi,'-')}.${ext}`, { type: blob.type });
+                if(navigator.canShare({ files: [file] })) posterFile = file;
+            } catch(e) { /* poster gagal diambil, lanjut share tanpa gambar */ }
+        }
+
+        try {
+            if(posterFile && navigator.canShare({ files: [posterFile] })) {
+                await navigator.share({ files: [posterFile], title: t.title, text: text + '\n' + url });
+                return;
+            }
+            if(navigator.share) {
+                await navigator.share({ title: t.title, text: text, url: url });
+                return;
+            }
+            throw new Error('no-share-api');
+        } catch(e) {
+            if(e && e.name === 'AbortError') return; // user membatalkan share, jangan fallback
             copyToClipboard(text + '\n' + url);
             showToast('Info turnamen disalin ke clipboard!');
         }
@@ -691,7 +774,20 @@
         renderHomeGrid();
         updateStats();
         startCountdown();
+        openDetailFromUrlHash();
     }
+
+    // ─── DEEP LINK: buka modal detail otomatis dari link yang dibagikan (#turnamen-ID) ───
+    function openDetailFromUrlHash() {
+        const hash = window.location.hash || '';
+        const match = hash.match(/^#turnamen-(.+)$/);
+        if(!match) return;
+        const id = decodeURIComponent(match[1]);
+        if(!tournaments.some(t => String(t.id) === String(id))) return;
+        switchPage('home');
+        openDetail(id);
+    }
+    window.addEventListener('hashchange', openDetailFromUrlHash);
 
     // ─── RENDER GRID ───
     function renderHomeGrid() {
