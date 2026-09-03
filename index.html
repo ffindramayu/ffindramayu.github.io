@@ -705,7 +705,7 @@
         }
     }
 
-    async function shareTournament(id, evt) {
+    function shareTournament(id, evt) {
         if(evt) evt.stopPropagation();
         const t = tournaments.find(x => String(x.id) === String(id));
         if(!t) return;
@@ -714,31 +714,16 @@
         const url = SCRIPT_URL + '?share=' + encodeURIComponent(t.id);
         const text = `🔥 ${t.title}\n📅 ${fmtDate(t.date)}\n📍 ${t.location || 'Area Indramayu'}\n🏆 Hadiah: ${t.prize || '-'}\n\nInfo & pendaftaran di KFFR Indramayu:`;
 
-        // Coba lampirkan poster sebagai file gambar supaya langsung tampil di aplikasi chat (WA/IG/dll),
-        // bukan cuma link teks.
-        let posterFile = null;
-        if(t.poster && navigator.canShare) {
-            try {
-                const res = await fetch(t.poster);
-                const blob = await res.blob();
-                const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
-                const file = new File([blob], `${(t.title||'poster').replace(/[^a-z0-9]+/gi,'-')}.${ext}`, { type: blob.type });
-                if(navigator.canShare({ files: [file] })) posterFile = file;
-            } catch(e) { /* poster gagal diambil, lanjut share tanpa gambar */ }
-        }
-
-        try {
-            if(posterFile && navigator.canShare({ files: [posterFile] })) {
-                await navigator.share({ files: [posterFile], title: t.title, text: text + '\n' + url });
-                return;
-            }
-            if(navigator.share) {
-                await navigator.share({ title: t.title, text: text, url: url });
-                return;
-            }
-            throw new Error('no-share-api');
-        } catch(e) {
-            if(e && e.name === 'AbortError') return; // user membatalkan share, jangan fallback
+        // PENTING: dikirim sebagai LINK teks (bukan file gambar terlampir), supaya
+        // WhatsApp/FB/IG menarik kartu preview (gambar+judul) otomatis dari link-nya.
+        // Kalau gambar dilampirkan sebagai file, linknya malah sering hilang/tidak terkirim.
+        if(navigator.share) {
+            navigator.share({ title: t.title, text: text, url: url }).catch((e) => {
+                if(e && e.name === 'AbortError') return; // user membatalkan, tidak perlu fallback
+                copyToClipboard(text + '\n' + url);
+                showToast('Info turnamen disalin ke clipboard!');
+            });
+        } else {
             copyToClipboard(text + '\n' + url);
             showToast('Info turnamen disalin ke clipboard!');
         }
