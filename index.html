@@ -715,7 +715,12 @@
             const file = new File([blob], `${slugify(filenameBase)}.${ext}`, { type: blob.type || 'image/jpeg' });
 
             if(navigator.canShare && navigator.canShare({ files: [file] })) {
+                // Salin caption ke clipboard sebagai jaring pengaman — beberapa
+                // aplikasi (terutama di desktop) tidak menyertakan teks saat
+                // berbagi file, jadi caption tetap tersedia untuk ditempel manual.
+                copyToClipboard(caption);
                 await navigator.share({ files: [file], title: title, text: caption });
+                showToast('Gambar dibagikan — teks keterangan juga tersalin, tempel jika belum otomatis.');
                 return;
             }
             // Fallback: unduh gambar + salin caption ke clipboard
@@ -745,7 +750,7 @@
             showToast('Turnamen ini belum memiliki poster.', 'warn');
             return;
         }
-        const websiteUrl = window.location.origin + window.location.pathname;
+        const websiteUrl = window.location.origin;
         const caption = `🔥 *INFORMASI TOURNAMENT*\n` +
                     `📌 Nama: *${t.title}*\n` +
                     `📅 Tanggal: ${fmtDate(t.date)}\n` +
