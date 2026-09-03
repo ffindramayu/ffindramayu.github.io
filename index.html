@@ -709,7 +709,9 @@
         if(evt) evt.stopPropagation();
         const t = tournaments.find(x => String(x.id) === String(id));
         if(!t) return;
-        const url = window.location.href.split('#')[0] + '#turnamen-' + t.id;
+        // Link share diarahkan lewat Apps Script dulu (bukan langsung ke GitHub Pages),
+        // supaya robot WhatsApp/FB/IG bisa baca meta gambar & judul turnamen sebelum redirect ke halaman asli.
+        const url = SCRIPT_URL + '?share=' + encodeURIComponent(t.id);
         const text = `🔥 ${t.title}\n📅 ${fmtDate(t.date)}\n📍 ${t.location || 'Area Indramayu'}\n🏆 Hadiah: ${t.prize || '-'}\n\nInfo & pendaftaran di KFFR Indramayu:`;
 
         // Coba lampirkan poster sebagai file gambar supaya langsung tampil di aplikasi chat (WA/IG/dll),
