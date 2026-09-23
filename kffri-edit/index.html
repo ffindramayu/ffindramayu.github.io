@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@400;600;700;900&family=Teko:wght@600;700&family=Bebas+Neue&family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --red:    #ef4444;
@@ -29,7 +28,6 @@
         
         .poster-shadow { box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
         
-        /* Draggable active state */
         .draggable-text {
             cursor: move;
             user-select: none;
@@ -39,14 +37,14 @@
             padding: 4px 8px;
             border: 2px dashed transparent;
             transition: border-color 0.2s;
+            z-index: 20;
         }
         .draggable-text:hover, .draggable-text.active {
             border-color: rgba(239, 68, 68, 0.8);
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             border-radius: 6px;
         }
 
-        /* Input & Controls Styling */
         .field-input { width: 100%; background: #09090b; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: #f4f4f5; font-size: 13px; outline: none; transition: border-color .2s; font-family: inherit; }
         .field-input:focus { border-color: var(--red); }
         .field-input::placeholder { color: var(--muted); }
@@ -67,7 +65,6 @@
     <!-- Header / Navbar -->
     <header style="background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);">
         <div style="max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
-            <!-- Brand Logo (PNG Tanpa Kotak) & Title -->
             <div style="display:flex;align-items:center;gap:12px;">
                 <img src="../logo.png" alt="Logo" style="height:36px;width:auto;object-fit:contain;" onerror="this.style.display='none';">
                 <div>
@@ -76,7 +73,6 @@
                 </div>
             </div>
 
-            <!-- Desktop Actions -->
             <div class="hidden md:flex items-center gap-2">
                 <a href="index.html" class="nav-icon-btn">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -88,7 +84,6 @@
                 </button>
             </div>
 
-            <!-- Mobile Hamburger Button -->
             <div class="flex md:hidden">
                 <button id="mobileMenuBtn" class="w-10 h-10 bg-[#09090b] border border-[#27272a] rounded-xl text-slate-300 flex items-center justify-center cursor-pointer hover:border-red-500 hover:text-red-500 transition">
                     <i class="fa-solid fa-bars text-lg"></i>
@@ -96,7 +91,6 @@
             </div>
         </div>
 
-        <!-- Mobile Dropdown Menu -->
         <div id="mobileDropdown" class="hidden md:hidden bg-[#09090b] border-t border-[#27272a] p-4 space-y-3">
             <a href="index.html" class="nav-icon-btn w-full justify-center">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -112,29 +106,27 @@
     <!-- Main Container -->
     <main style="max-width:1200px;width:100%;margin:0 auto;padding:24px 20px 60px;" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
         
-        <!-- Controls Panel (Left on desktop) -->
+        <!-- Controls Panel -->
         <div class="lg:col-span-5 bg-[#111113] border border-[#27272a] rounded-2xl p-5 shadow-xl space-y-4 order-2 lg:order-1">
             <h2 class="text-sm md:text-base font-bold text-red-500 border-b border-[#27272a] pb-3 flex items-center gap-2">
                 <i class="fa-solid fa-sliders"></i> Panel Kontrol & Templat
             </h2>
 
-            <!-- Pilihan Templat Bawaan -->
             <div class="space-y-2 bg-[#09090b] p-3.5 rounded-xl border border-[#27272a]">
                 <label class="text-[11px] font-semibold uppercase tracking-wider text-red-400 block mb-2"><i class="fa-solid fa-border-all"></i> Pilih Templat yang Disediakan</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <div class="template-thumb" onclick="selectPresetTemplate('https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5B966BEEC%5D.png', this)">
-                        <img src="https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5B966BEEC%5D.png" class="w-full h-16 object-cover" alt="Templat 1">
+                    <div class="template-thumb" onclick="selectPresetTemplate('template/1.png', this)">
+                        <img src="template/1.png" class="w-full h-16 object-cover" alt="Templat 1">
                     </div>
-                    <div class="template-thumb" onclick="selectPresetTemplate('https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5BF552006%5D.png', this)">
-                        <img src="https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5BF552006%5D.png" class="w-full h-16 object-cover" alt="Templat 2">
+                    <div class="template-thumb" onclick="selectPresetTemplate('template/2.png', this)">
+                        <img src="template/2.png" class="w-full h-16 object-cover" alt="Templat 2">
                     </div>
-                    <div class="template-thumb" onclick="selectPresetTemplate('https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5BB845443%5D.png', this)">
-                        <img src="https://raw.githubusercontent.com/ffindramayu/ffindramayu.github.io/refs/heads/main/kffri-edit/template/TEMPLATE%20POSTER%20REGIST%20%5BB845443%5D.png" class="w-full h-16 object-cover" alt="Templat 3">
+                    <div class="template-thumb" onclick="selectPresetTemplate('template/3.png', this)">
+                        <img src="template/3.png" class="w-full h-16 object-cover" alt="Templat 3">
                     </div>
                 </div>
             </div>
 
-            <!-- Template Background Custom Upload -->
             <div class="space-y-2 bg-[#09090b] p-3.5 rounded-xl border border-[#27272a]">
                 <label class="text-[11px] font-semibold uppercase tracking-wider text-red-400 block"><i class="fa-solid fa-image"></i> Atau Upload Templat Sendiri</label>
                 <input type="file" id="uploadTemplateBg" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-500 cursor-pointer">
@@ -142,7 +134,6 @@
 
             <hr class="border-[#27272a]">
 
-            <!-- Layer Manager List -->
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Daftar Layer Teks</h3>
@@ -151,35 +142,28 @@
                     </button>
                 </div>
 
-                <!-- Container for Dynamic Layer Inputs -->
-                <div id="layersContainer" class="space-y-2.5 max-h-[40vh] lg:max-h-[50vh] overflow-y-auto pr-1">
-                    <!-- Javascript populates layer controllers here -->
-                </div>
+                <div id="layersContainer" class="space-y-2.5 max-h-[40vh] lg:max-h-[50vh] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
-        <!-- Poster Preview Wrapper (Right on desktop) -->
+        <!-- Poster Preview Wrapper -->
         <div class="lg:col-span-7 flex flex-col items-center justify-center bg-[#111113]/50 border border-[#27272a] rounded-2xl p-5 overflow-hidden order-1 lg:order-2">
             <div class="text-xs text-slate-400 mb-3 font-semibold flex items-center gap-1.5">
                 <i class="fa-solid fa-eye text-red-500"></i> Pratinjau Poster (Geser teks langsung di sini)
             </div>
             
-            <!-- Poster Canvas Container -->
             <div class="relative w-full flex justify-center overflow-auto py-2">
                 <div id="posterCanvas" class="relative w-[400px] h-[500px] md:w-[500px] md:h-[625px] bg-[#09090b] text-white shrink-0 poster-shadow overflow-hidden select-none rounded-xl border border-[#27272a]">
                     
-                    <!-- Background Template Image -->
-                    <img id="templateBgPreview" src="" crossorigin="anonymous" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none">
-                    
-                    <!-- Fallback background helper -->
-                    <div id="fallbackBg" class="absolute inset-0 bg-[#09090b] z-0 flex flex-col items-center justify-center p-6 text-center text-slate-400 pointer-events-none">
+                    <img id="canvasBgImg" src="" class="absolute inset-0 w-full h-full object-cover hidden pointer-events-none z-0" alt="Background Template">
+
+                    <div id="fallbackBg" class="absolute inset-0 bg-[#09090b] z-10 flex flex-col items-center justify-center p-6 text-center text-slate-400 pointer-events-none">
                         <i class="fa-regular fa-image text-4xl mb-3 text-red-500"></i>
                         <p class="text-xs md:text-sm font-bold">Belum ada templat yang dipilih.</p>
                         <p class="text-[10px] md:text-xs text-slate-500 mt-1">Silakan pilih templat bawaan atau upload gambar di samping.</p>
                     </div>
 
-                    <!-- DYNAMIC DRAGGABLE TEXT LAYERS -->
-                    <div id="canvasLayersArea" class="absolute inset-0 z-10 pointer-events-none"></div>
+                    <div id="canvasLayersArea" class="absolute inset-0 z-20 pointer-events-none"></div>
 
                 </div>
             </div>
@@ -192,9 +176,7 @@
         <p style="font-size:12px;color:#3f3f46;margin:0;">&copy; 2026 KFFR Indramayu · Poster Overlay Editor</p>
     </footer>
 
-    <!-- Script Interactive Drag, Resize, Fonts & Mobile Optimization -->
     <script>
-        // Toggle Mobile Menu
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileDropdown = document.getElementById('mobileDropdown');
         mobileMenuBtn.addEventListener('click', () => {
@@ -205,8 +187,9 @@
 
         const layersContainer = document.getElementById('layersContainer');
         const canvasLayersArea = document.getElementById('canvasLayersArea');
-        const templateBgPreview = document.getElementById('templateBgPreview');
         const fallbackBg = document.getElementById('fallbackBg');
+        const canvasBgImg = document.getElementById('canvasBgImg');
+        const posterCanvas = document.getElementById('posterCanvas');
 
         function renderUI() {
             layersContainer.innerHTML = '';
@@ -347,12 +330,23 @@
             renderUI();
         });
 
-        // Fungsi memilih templat bawaan (preset)
         window.selectPresetTemplate = function(url, element) {
-            templateBgPreview.src = url;
-            fallbackBg.style.display = 'none';
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                
+                const dataURL = canvas.toDataURL('image/png');
+                fallbackBg.style.display = 'none';
+                canvasBgImg.src = dataURL;
+                canvasBgImg.classList.remove('hidden');
+            };
+            img.src = url;
             
-            // Tandai thumbnail yang aktif
             document.querySelectorAll('.template-thumb').forEach(thumb => thumb.classList.remove('selected'));
             element.classList.add('selected');
         }
@@ -363,43 +357,92 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    templateBgPreview.src = evt.target.result;
                     fallbackBg.style.display = 'none';
+                    canvasBgImg.src = evt.target.result;
+                    canvasBgImg.classList.remove('hidden');
                     document.querySelectorAll('.template-thumb').forEach(thumb => thumb.classList.remove('selected'));
                 }
                 reader.readAsDataURL(file);
             }
         });
 
+        // 100% NATIVE CANVAS DOWNLOAD (Bebas Error html2canvas / CORS)
         function handleDownload() {
-            const poster = document.getElementById('posterCanvas');
             const btnDesktop = document.getElementById('downloadBtn');
             const btnMobile = document.getElementById('downloadBtnMobile');
             
             const originalTextDesktop = btnDesktop ? btnDesktop.innerHTML : '';
             const originalTextMobile = btnMobile ? btnMobile.innerHTML : '';
 
-            if(btnDesktop) { btnDesktop.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnDesktop.disabled = true; }
-            if(btnMobile) { btnMobile.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnMobile.disabled = true; }
+            if (btnDesktop) { btnDesktop.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnDesktop.disabled = true; }
+            if (btnMobile) { btnMobile.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnMobile.disabled = true; }
 
-            html2canvas(poster, {
-                scale: 3,
-                useCORS: true,
-                allowTaint: true
-            }).then(canvas => {
+            if (!canvasBgImg.src || canvasBgImg.classList.contains('hidden')) {
+                alert('Silakan pilih atau upload templat terlebih dahulu!');
+                resetButtons();
+                return;
+            }
+
+            const exportCanvas = document.createElement('canvas');
+            const targetWidth = 1000;
+            const targetHeight = 1250;
+            exportCanvas.width = targetWidth;
+            exportCanvas.height = targetHeight;
+            const ctx = exportCanvas.getContext('2d');
+
+            const bgImage = new Image();
+            bgImage.crossOrigin = "anonymous";
+            bgImage.onload = function() {
+                ctx.drawImage(bgImage, 0, 0, targetWidth, targetHeight);
+
+                const previewRect = posterCanvas.getBoundingClientRect();
+                const scaleX = targetWidth / previewRect.width;
+                const scaleY = targetHeight / previewRect.height;
+
+                layers.forEach(layer => {
+                    const el = document.getElementById(layer.id);
+                    if (el) {
+                        const elRect = el.getBoundingClientRect();
+                        const relX = elRect.left - previewRect.left;
+                        const relY = elRect.top - previewRect.top;
+
+                        const finalX = relX * scaleX;
+                        const finalY = relY * scaleY;
+                        const finalFontSize = layer.size * scaleX;
+
+                        ctx.save();
+                        let fontFamily = 'Plus Jakarta Sans';
+                        if (layer.font.includes('montserrat')) fontFamily = 'Montserrat';
+                        else if (layer.font.includes('teko')) fontFamily = 'Teko';
+                        else if (layer.font.includes('bebas')) fontFamily = 'Bebas Neue';
+                        else if (layer.font.includes('orbitron')) fontFamily = 'Orbitron';
+                        else if (layer.font.includes('rajdhani')) fontFamily = 'Rajdhani';
+
+                        ctx.font = `bold ${finalFontSize}px ${fontFamily}`;
+                        ctx.fillStyle = layer.color;
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(layer.text, finalX + (4 * scaleX), finalY + (4 * scaleY));
+                        ctx.restore();
+                    }
+                });
+
                 const link = document.createElement('a');
                 link.download = 'poster-turnamen-mobile.png';
-                link.href = canvas.toDataURL('image/png');
+                link.href = exportCanvas.toDataURL('image/png');
                 link.click();
 
-                if(btnDesktop) { btnDesktop.innerHTML = originalTextDesktop; btnDesktop.disabled = false; }
-                if(btnMobile) { btnMobile.innerHTML = originalTextMobile; btnMobile.disabled = false; }
-            }).catch(err => {
-                console.error(err);
-                alert('Gagal mendownload poster. Pastikan file templat gambar telah diunggah dengan benar.');
-                if(btnDesktop) { btnDesktop.innerHTML = originalTextDesktop; btnDesktop.disabled = false; }
-                if(btnMobile) { btnMobile.innerHTML = originalTextMobile; btnMobile.disabled = false; }
-            });
+                resetButtons();
+            };
+            bgImage.onerror = function() {
+                alert('Gagal merender gambar poster untuk diunduh.');
+                resetButtons();
+            };
+            bgImage.src = canvasBgImg.src;
+
+            function resetButtons() {
+                if (btnDesktop) { btnDesktop.innerHTML = originalTextDesktop; btnDesktop.disabled = false; }
+                if (btnMobile) { btnMobile.innerHTML = originalTextMobile; btnMobile.disabled = false; }
+            }
         }
 
         document.getElementById('downloadBtn').addEventListener('click', handleDownload);
