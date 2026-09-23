@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poster Generator – KFFR Indramayu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@400;600;700;900&family=Teko:wght@600;700&family=Bebas+Neue&family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --red:    #ef4444;
+            --red-dk: #b91c1c;
+            --bg:     #09090b;
+            --card:   #111113;
+            --border: #27272a;
+            --muted:  #71717a;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #f4f4f5; margin: 0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        .comic-title { font-family: 'Bangers', cursive; letter-spacing: 0.07em; line-height: 1; }
+
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-teko { font-family: 'Teko', sans-serif; }
+        .font-bebas { font-family: 'Bebas Neue', cursive; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        
+        .poster-shadow { box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
+        
+        /* Draggable active state */
+        .draggable-text {
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+            position: absolute;
+            white-space: nowrap;
+            padding: 4px 8px;
+            border: 2px dashed transparent;
+            transition: border-color 0.2s;
+        }
+        .draggable-text:hover, .draggable-text.active {
+            border-color: rgba(239, 68, 68, 0.8);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        /* Input & Controls Styling */
+        .field-input { width: 100%; background: #09090b; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: #f4f4f5; font-size: 13px; outline: none; transition: border-color .2s; font-family: inherit; }
+        .field-input:focus { border-color: var(--red); }
+        .field-input::placeholder { color: var(--muted); }
+        
+        .btn-red { background: var(--red); color: #fff; font-weight: 800; border: none; border-radius: 12px; padding: 11px 20px; cursor: pointer; transition: background .15s, transform .1s; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-red:hover { background: #dc2626; }
+        .btn-red:active { transform: scale(.97); }
+
+        .nav-icon-btn { padding: 9px 16px; border-radius: 12px; color: #a1a1aa; background: #111113; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; text-decoration: none; white-space: nowrap; }
+        .nav-icon-btn:hover { color: #ef4444; border-color: #ef4444; background: #ef444410; }
+        
+        .template-thumb { cursor: pointer; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; transition: all .2s; }
+        .template-thumb:hover, .template-thumb.selected { border-color: var(--red); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header style="background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);">
+        <div style="max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+            <!-- Brand Logo (PNG Tanpa Kotak) & Title -->
+            <div style="display:flex;align-items:center;gap:12px;">
+                <img src="logo.png" alt="Logo" style="height:36px;width:auto;object-fit:contain;" onerror="this.style.display='none';">
+                <div>
+                    <h1 class="comic-title" style="font-size:20px;color:var(--red);margin:0;">POSTER <span style="color:#f4f4f5;">EDITOR</span></h1>
+                    <p style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:2px 0 0 0;">KFFR Indramayu Suite</p>
+                </div>
+            </div>
+
+            <!-- Desktop Actions -->
+            <div class="hidden md:flex items-center gap-2">
+                <a href="index.html" class="nav-icon-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Kembali ke Beranda</span>
+                </a>
+                <button id="downloadBtn" class="btn-red" style="padding:9px 18px;font-size:12px;">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download (PNG)</span>
+                </button>
+            </div>
+
+            <!-- Mobile Hamburger Button -->
+            <div class="flex md:hidden">
+                <button id="mobileMenuBtn" class="w-10 h-10 bg-[#09090b] border border-[#27272a] rounded-xl text-slate-300 flex items-center justify-center cursor-pointer hover:border-red-500 hover:text-red-500 transition">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileDropdown" class="hidden md:hidden bg-[#09090b] border-t border-[#27272a] p-4 space-y-3">
+            <a href="index.html" class="nav-icon-btn w-full justify-center">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Kembali ke Beranda</span>
+            </a>
+            <button id="downloadBtnMobile" class="btn-red w-full justify-center" style="padding:10px 16px; font-size:12px;">
+                <i class="fa-solid fa-download"></i>
+                <span>Download (PNG)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main style="max-width:1200px;width:100%;margin:0 auto;padding:24px 20px 60px;" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+        
+        <!-- Controls Panel (Left on desktop) -->
+        <div class="lg:col-span-5 bg-[#111113] border border-[#27272a] rounded-2xl p-5 shadow-xl space-y-4 order-2 lg:order-1">
+            <h2 class="text-sm md:text-base font-bold text-red-500 border-b border-[#27272a] pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i> Panel Kontrol & Templat
+            </h2>
+
+            <!-- Pilihan Templat Bawaan -->
+            <div class="space-y-2 bg-[#09090b] p-3.5 rounded-xl border border-[#27272a]">
+                <label class="text-[11px] font-semibold uppercase tracking-wider text-red-400 block mb-2"><i class="fa-solid fa-border-all"></i> Pilih Templat yang Disediakan</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="template-thumb" onclick="selectPresetTemplate('', this)">
+                        <img src="" class="w-full h-16 object-cover" alt="Templat 1">
+                    </div>
+                    <div class="template-thumb" onclick="selectPresetTemplate('', this)">
+                        <img src="" class="w-full h-16 object-cover" alt="Templat 2">
+                    </div>
+                    <div class="template-thumb" onclick="selectPresetTemplate('', this)">
+                        <img src="" class="w-full h-16 object-cover" alt="Templat 3">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Background Custom Upload -->
+            <div class="space-y-2 bg-[#09090b] p-3.5 rounded-xl border border-[#27272a]">
+                <label class="text-[11px] font-semibold uppercase tracking-wider text-red-400 block"><i class="fa-solid fa-image"></i> Atau Upload Templat Sendiri</label>
+                <input type="file" id="uploadTemplateBg" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-500 cursor-pointer">
+            </div>
+
+            <hr class="border-[#27272a]">
+
+            <!-- Layer Manager List -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Daftar Layer Teks</h3>
+                    <button id="addLayerBtn" class="bg-[#18181b] hover:bg-[#27272a] text-red-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-[#27272a] transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-plus"></i> Tambah Teks
+                    </button>
+                </div>
+
+                <!-- Container for Dynamic Layer Inputs -->
+                <div id="layersContainer" class="space-y-2.5 max-h-[40vh] lg:max-h-[50vh] overflow-y-auto pr-1">
+                    <!-- Javascript populates layer controllers here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Poster Preview Wrapper (Right on desktop) -->
+        <div class="lg:col-span-7 flex flex-col items-center justify-center bg-[#111113]/50 border border-[#27272a] rounded-2xl p-5 overflow-hidden order-1 lg:order-2">
+            <div class="text-xs text-slate-400 mb-3 font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-eye text-red-500"></i> Pratinjau Poster (Geser teks langsung di sini)
+            </div>
+            
+            <!-- Poster Canvas Container -->
+            <div class="relative w-full flex justify-center overflow-auto py-2">
+                <div id="posterCanvas" class="relative w-[400px] h-[500px] md:w-[500px] md:h-[625px] bg-[#09090b] text-white shrink-0 poster-shadow overflow-hidden select-none rounded-xl border border-[#27272a]">
+                    
+                    <!-- Background Template Image -->
+                    <img id="templateBgPreview" src="" crossorigin="anonymous" class="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none">
+                    
+                    <!-- Fallback background helper -->
+                    <div id="fallbackBg" class="absolute inset-0 bg-[#09090b] z-0 flex flex-col items-center justify-center p-6 text-center text-slate-400 pointer-events-none">
+                        <i class="fa-regular fa-image text-4xl mb-3 text-red-500"></i>
+                        <p class="text-xs md:text-sm font-bold">Belum ada templat yang dipilih.</p>
+                        <p class="text-[10px] md:text-xs text-slate-500 mt-1">Silakan pilih templat bawaan atau upload gambar di samping.</p>
+                    </div>
+
+                    <!-- DYNAMIC DRAGGABLE TEXT LAYERS -->
+                    <div id="canvasLayersArea" class="absolute inset-0 z-10 pointer-events-none"></div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="border-top:1px solid #27272a;padding:24px 20px;text-align:center;background:#0d0d0f;margin-top:auto;">
+        <p style="font-size:12px;color:#3f3f46;margin:0;">&copy; 2026 KFFR Indramayu · Poster Overlay Editor</p>
+    </footer>
+
+    <!-- Script Interactive Drag, Resize, Fonts & Mobile Optimization -->
+    <script>
+        // Toggle Mobile Menu
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileDropdown = document.getElementById('mobileDropdown');
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileDropdown.classList.toggle('hidden');
+        });
+
+        let layers = [];
+
+        const layersContainer = document.getElementById('layersContainer');
+        const canvasLayersArea = document.getElementById('canvasLayersArea');
+        const templateBgPreview = document.getElementById('templateBgPreview');
+        const fallbackBg = document.getElementById('fallbackBg');
+
+        function renderUI() {
+            layersContainer.innerHTML = '';
+            canvasLayersArea.innerHTML = '';
+
+            layers.forEach((layer, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-[#09090b] border border-[#27272a] rounded-xl p-3 space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-red-400 uppercase">Teks #${index + 1}</span>
+                        <button onclick="removeLayer('${layer.id}')" class="text-slate-500 hover:text-red-500 text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div>
+                        <input type="text" value="${layer.text}" oninput="updateLayerText('${layer.id}', this.value)" class="field-input">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[9px] text-slate-400 block mb-0.5">Ukuran (${layer.size}px)</label>
+                            <input type="range" min="8" max="50" value="${layer.size}" oninput="updateLayerSize('${layer.id}', this.value)" class="w-full accent-red-500">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-400 block mb-0.5">Font</label>
+                            <select onchange="updateLayerFont('${layer.id}', this.value)" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-1 py-1 text-[10px] text-white">
+                                <option value="font-montserrat" ${layer.font==='font-montserrat'?'selected':''}>Montserrat</option>
+                                <option value="font-teko" ${layer.font==='font-teko'?'selected':''}>Teko</option>
+                                <option value="font-bebas" ${layer.font==='font-bebas'?'selected':''}>Bebas</option>
+                                <option value="font-orbitron" ${layer.font==='font-orbitron'?'selected':''}>Orbitron</option>
+                                <option value="font-rajdhani" ${layer.font==='font-rajdhani'?'selected':''}>Rajdhani</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-400 block mb-0.5">Warna</label>
+                            <input type="color" value="${layer.color}" onchange="updateLayerColor('${layer.id}', this.value)" class="w-full h-6 bg-[#09090b] border border-[#27272a] rounded-lg cursor-pointer">
+                        </div>
+                    </div>
+                `;
+                layersContainer.appendChild(card);
+
+                const el = document.createElement('div');
+                el.id = layer.id;
+                el.className = `draggable-text ${layer.font}`;
+                el.style.left = layer.x + 'px';
+                el.style.top = layer.y + 'px';
+                el.style.fontSize = layer.size + 'px';
+                el.style.color = layer.color;
+                el.style.fontWeight = layer.weight;
+                el.style.pointerEvents = 'auto';
+                el.innerText = layer.text;
+
+                makeDraggable(el, layer);
+                canvasLayersArea.appendChild(el);
+            });
+        }
+
+        function makeDraggable(element, layerObj) {
+            let isDragging = false;
+            let startX, startY;
+
+            element.addEventListener('mousedown', dragStart);
+            element.addEventListener('touchstart', dragStart, {passive: false});
+
+            function dragStart(e) {
+                isDragging = true;
+                element.classList.add('active');
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                startX = clientX - layerObj.x;
+                startY = clientY - layerObj.y;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchmove', drag, {passive: false});
+                document.addEventListener('touchend', dragEnd);
+                e.preventDefault();
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                layerObj.x = clientX - startX;
+                layerObj.y = clientY - startY;
+
+                element.style.left = layerObj.x + 'px';
+                element.style.top = layerObj.y + 'px';
+            }
+
+            function dragEnd() {
+                isDragging = false;
+                element.classList.remove('active');
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('touchend', dragEnd);
+            }
+        }
+
+        window.updateLayerText = function(id, val) {
+            const layer = layers.find(l => l.id === id);
+            if(layer) { layer.text = val; document.getElementById(id).innerText = val; }
+        }
+        window.updateLayerSize = function(id, val) {
+            const layer = layers.find(l => l.id === id);
+            if(layer) { layer.size = val; document.getElementById(id).style.fontSize = val + 'px'; }
+        }
+        window.updateLayerFont = function(id, val) {
+            const layer = layers.find(l => l.id === id);
+            if(layer) {
+                const el = document.getElementById(id);
+                el.classList.remove(layer.font);
+                layer.font = val;
+                el.classList.add(val);
+            }
+        }
+        window.updateLayerColor = function(id, val) {
+            const layer = layers.find(l => l.id === id);
+            if(layer) { layer.color = val; document.getElementById(id).style.color = val; }
+        }
+        window.removeLayer = function(id) {
+            layers = layers.filter(l => l.id !== id);
+            renderUI();
+        }
+
+        document.getElementById('addLayerBtn').addEventListener('click', () => {
+            const newId = 'layer-' + Date.now();
+            layers.push({
+                id: newId,
+                text: 'TEKS BARU',
+                x: 100,
+                y: 200,
+                size: 14,
+                font: 'font-montserrat',
+                color: '#ffffff',
+                weight: '700'
+            });
+            renderUI();
+        });
+
+        // Fungsi memilih templat bawaan (preset)
+        window.selectPresetTemplate = function(url, element) {
+            templateBgPreview.src = url;
+            fallbackBg.style.display = 'none';
+            
+            // Tandai thumbnail yang aktif
+            document.querySelectorAll('.template-thumb').forEach(thumb => thumb.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        const uploadTemplateBg = document.getElementById('uploadTemplateBg');
+        uploadTemplateBg.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    templateBgPreview.src = evt.target.result;
+                    fallbackBg.style.display = 'none';
+                    document.querySelectorAll('.template-thumb').forEach(thumb => thumb.classList.remove('selected'));
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function handleDownload() {
+            const poster = document.getElementById('posterCanvas');
+            const btnDesktop = document.getElementById('downloadBtn');
+            const btnMobile = document.getElementById('downloadBtnMobile');
+            
+            const originalTextDesktop = btnDesktop ? btnDesktop.innerHTML : '';
+            const originalTextMobile = btnMobile ? btnMobile.innerHTML : '';
+
+            if(btnDesktop) { btnDesktop.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnDesktop.disabled = true; }
+            if(btnMobile) { btnMobile.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Memproses...</span>'; btnMobile.disabled = true; }
+
+            html2canvas(poster, {
+                scale: 3,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'poster-turnamen-mobile.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                if(btnDesktop) { btnDesktop.innerHTML = originalTextDesktop; btnDesktop.disabled = false; }
+                if(btnMobile) { btnMobile.innerHTML = originalTextMobile; btnMobile.disabled = false; }
+            }).catch(err => {
+                console.error(err);
+                alert('Gagal mendownload poster. Pastikan file templat gambar telah diunggah dengan benar.');
+                if(btnDesktop) { btnDesktop.innerHTML = originalTextDesktop; btnDesktop.disabled = false; }
+                if(btnMobile) { btnMobile.innerHTML = originalTextMobile; btnMobile.disabled = false; }
+            });
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+        document.getElementById('downloadBtnMobile').addEventListener('click', handleDownload);
+
+        renderUI();
+    </script>
+</body>
+</html>
