@@ -38,6 +38,7 @@
             border: 2px dashed transparent;
             transition: border-color 0.2s;
             z-index: 20;
+            transform: translate(-50%, -50%);
         }
         .draggable-text:hover, .draggable-text.active {
             border-color: rgba(239, 68, 68, 0.8);
@@ -153,7 +154,7 @@
             </div>
             
             <div class="relative w-full flex justify-center overflow-auto py-2">
-                <div id="posterCanvas" class="relative w-[400px] h-[500px] md:w-[500px] md:h-[625px] bg-[#09090b] text-white shrink-0 poster-shadow overflow-hidden select-none rounded-xl border border-[#27272a]">
+                <div id="posterCanvas" class="relative w-[400px] h-[500px] md:w-[480px] md:h-[600px] bg-[#09090b] text-white shrink-0 poster-shadow overflow-hidden select-none rounded-xl border border-[#27272a]">
                     
                     <img id="canvasBgImg" src="" class="absolute inset-0 w-full h-full object-cover hidden pointer-events-none z-0" alt="Background Template">
 
@@ -209,7 +210,6 @@
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="text-[9px] text-slate-400 block mb-0.5">Ukuran (${layer.size}px)</label>
-                            <!-- Ukuran maksimal dinaikkan ke 150 agar teks bisa jauh lebih besar -->
                             <input type="range" min="10" max="150" value="${layer.size}" oninput="updateLayerSize('${layer.id}', this.value)" class="w-full accent-red-500">
                         </div>
                         <div>
@@ -233,8 +233,8 @@
                 const el = document.createElement('div');
                 el.id = layer.id;
                 el.className = `draggable-text ${layer.font}`;
-                el.style.left = layer.x + 'px';
-                el.style.top = layer.y + 'px';
+                el.style.left = layer.xPercent + '%';
+                el.style.top = layer.yPercent + '%';
                 el.style.fontSize = layer.size + 'px';
                 el.style.color = layer.color;
                 el.style.fontWeight = layer.weight;
@@ -258,8 +258,13 @@
                 element.classList.add('active');
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                startX = clientX - layerObj.x;
-                startY = clientY - layerObj.y;
+                
+                const rect = posterCanvas.getBoundingClientRect();
+                const currentPixelX = (layerObj.xPercent / 100) * rect.width;
+                const currentPixelY = (layerObj.yPercent / 100) * rect.height;
+
+                startX = clientX - currentPixelX;
+                startY = clientY - currentPixelY;
 
                 document.addEventListener('mousemove', drag);
                 document.addEventListener('mouseup', dragEnd);
@@ -273,11 +278,16 @@
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 
-                layerObj.x = clientX - startX;
-                layerObj.y = clientY - startY;
+                const rect = posterCanvas.getBoundingClientRect();
+                let newPixelX = clientX - startX;
+                let newPixelY = clientY - startY;
 
-                element.style.left = layerObj.x + 'px';
-                element.style.top = layerObj.y + 'px';
+                // Hitung ulang ke persentase secara presisi di dalam kotak canvas
+                layerObj.xPercent = (newPixelX / rect.width) * 100;
+                layerObj.yPercent = (newPixelY / rect.height) * 100;
+
+                element.style.left = layerObj.xPercent + '%';
+                element.style.top = layerObj.yPercent + '%';
             }
 
             function dragEnd() {
@@ -296,7 +306,7 @@
         }
         window.updateLayerSize = function(id, val) {
             const layer = layers.find(l => l.id === id);
-            if(layer) { layer.size = val; document.getElementById(id).style.fontSize = val + 'px'; }
+            if(layer) { layer.size = Number(val); document.getElementById(id).style.fontSize = val + 'px'; }
         }
         window.updateLayerFont = function(id, val) {
             const layer = layers.find(l => l.id === id);
@@ -321,9 +331,9 @@
             layers.push({
                 id: newId,
                 text: 'TEKS BARU',
-                x: 100,
-                y: 200,
-                size: 28, // Default ukuran awal diperbesar sedikit menjadi 28px
+                xPercent: 50,
+                yPercent: 30,
+                size: 28,
                 font: 'font-montserrat',
                 color: '#ffffff',
                 weight: '700'
@@ -335,15 +345,8 @@
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                
-                const dataURL = canvas.toDataURL('image/png');
                 fallbackBg.style.display = 'none';
-                canvasBgImg.src = dataURL;
+                canvasBgImg.src = url;
                 canvasBgImg.classList.remove('hidden');
             };
             img.src = url;
@@ -383,51 +386,46 @@
                 return;
             }
 
-            const exportCanvas = document.createElement('canvas');
-            const targetWidth = 1000;
-            const targetHeight = 1250;
-            exportCanvas.width = targetWidth;
-            exportCanvas.height = targetHeight;
-            const ctx = exportCanvas.getContext('2d');
-
             const bgImage = new Image();
             bgImage.crossOrigin = "anonymous";
             bgImage.onload = function() {
-                ctx.drawImage(bgImage, 0, 0, targetWidth, targetHeight);
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = bgImage.naturalWidth;
+                exportCanvas.height = bgImage.naturalHeight;
+                const ctx = exportCanvas.getContext('2d');
 
-                const previewRect = posterCanvas.getBoundingClientRect();
-                const scaleX = targetWidth / previewRect.width;
-                const scaleY = targetHeight / previewRect.height;
+                // Gambar background template pada resolusi aslinya
+                ctx.drawImage(bgImage, 0, 0);
+
+                // Skala ukuran font proporsional berdasarkan perbandingan lebar gambar asli dan preview layar
+                const previewWidth = posterCanvas.clientWidth;
+                const scaleFactor = bgImage.naturalWidth / previewWidth;
 
                 layers.forEach(layer => {
-                    const el = document.getElementById(layer.id);
-                    if (el) {
-                        const elRect = el.getBoundingClientRect();
-                        const relX = elRect.left - previewRect.left;
-                        const relY = elRect.top - previewRect.top;
+                    // Konversi koordinat persentase langsung ke piksel gambar asli
+                    const finalX = (layer.xPercent / 100) * bgImage.naturalWidth;
+                    const finalY = (layer.yPercent / 100) * bgImage.naturalHeight;
+                    const finalFontSize = layer.size * scaleFactor;
 
-                        const finalX = relX * scaleX;
-                        const finalY = relY * scaleY;
-                        const finalFontSize = layer.size * scaleX;
+                    ctx.save();
+                    let fontFamily = 'Plus Jakarta Sans';
+                    if (layer.font.includes('montserrat')) fontFamily = 'Montserrat';
+                    else if (layer.font.includes('teko')) fontFamily = 'Teko';
+                    else if (layer.font.includes('bebas')) fontFamily = 'Bebas Neue';
+                    else if (layer.font.includes('orbitron')) fontFamily = 'Orbitron';
+                    else if (layer.font.includes('rajdhani')) fontFamily = 'Rajdhani';
 
-                        ctx.save();
-                        let fontFamily = 'Plus Jakarta Sans';
-                        if (layer.font.includes('montserrat')) fontFamily = 'Montserrat';
-                        else if (layer.font.includes('teko')) fontFamily = 'Teko';
-                        else if (layer.font.includes('bebas')) fontFamily = 'Bebas Neue';
-                        else if (layer.font.includes('orbitron')) fontFamily = 'Orbitron';
-                        else if (layer.font.includes('rajdhani')) fontFamily = 'Rajdhani';
-
-                        ctx.font = `bold ${finalFontSize}px ${fontFamily}`;
-                        ctx.fillStyle = layer.color;
-                        ctx.textBaseline = 'top';
-                        ctx.fillText(layer.text, finalX, finalY);
-                        ctx.restore();
-                    }
+                    ctx.font = `bold ${finalFontSize}px ${fontFamily}`;
+                    ctx.fillStyle = layer.color;
+                    // Menggunakan center alignment agar titik tengah teks pada pratinjau persis sama dengan render canvas
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(layer.text, finalX, finalY);
+                    ctx.restore();
                 });
 
                 const link = document.createElement('a');
-                link.download = 'poster-turnamen-mobile.png';
+                link.download = 'poster-turnamen-kffr.png';
                 link.href = exportCanvas.toDataURL('image/png');
                 link.click();
 
